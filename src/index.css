@@ -1,50 +1,69 @@
 body {
-  font: 14px "Helvetica", Futura, sans-serif;
-  margin: 20px;
-}
+    font: 1em "Helvetica", Futura, sans-serif;
+    margin: 1em;
+  }
+  
+  ol, ul {
+    padding-left: 1em;
+  }
+  
+  .header {
+    margin-bottom: 1em;
+  }
 
-ol, ul {
-  padding-left: 30px;
-}
+  #hint {
+    
+    margin-bottom: 1.5em;
+  }
+  
+  .card {
+    background-color: #ddd;
+    border: 0px;
+    border-radius: 0.5em;
+    float: left;
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 1em;
+    height: 4rem;
+    margin-right: 0.5em;
+    margin-top: 0.5em;
+    padding: 0.25em;
+    text-align: center;
+    width: 8em;
+  }
 
-.board-row:after {
-  clear: both;
-  content: "";
-  display: table;
-}
+  .card-red {
+    background-color: #fcc;
+  }
 
-.status {
-  margin-bottom: 10px;
-}
+  .card-blue {
+    background-color: #ccf;
+  }
+  
+  .card-neutral {
+    background-color: #666;
+    color: #fff;
+  }
+  
+  .card-bomb {
+    background-color: #000;
+    color: #fff;
+  }
 
-.card {
-  /* background: #dfd; */
-  border: 1px solid #999;
-  float: left;
-  font-size: 24px;
-  font-weight: bold;
-  line-height: 34px;
-  height: 100px;
-  margin-right: 7px;
-  margin-top: 7px;
-  padding: 0px;
-  text-align: center;
-  width: 200px;
-}
-
-.card:focus {
-  outline: none;
-}
-
-.kbd-navigation .card:focus {
-  background: #ddd;
-}
-
-.game {
-  display: flex;
-  flex-direction: row;
-}
-
-.game-info {
-  margin-left: 20px;
-}
+  .card:focus {
+    outline: none;
+  }
+  
+  .kbd-navigation .card:focus {
+    background: #ddd;
+  }
+  
+  .game {
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .game-info {
+    margin-left: 20px;
+  }
+  

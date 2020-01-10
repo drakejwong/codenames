@@ -2,140 +2,198 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-function Card(props) {
-  return (
-    <button className="card" style={props.style} onClick={props.onClick}>
-      {props.value}
-    </button>
-  );
-}
+// Length 25 array for words from database
+// Length 25 array for colors, random (8,9,7,1)
 
-class Board extends React.Component {
+const WORDS = [...Array(25).keys()];
+const COLORS = ['blue', 'blue', 'blue', 'blue', 'blue',
+                'red', 'red', 'red', 'red', 'red',
+                'neutral', 'neutral', 'bomb', 'neutral', 'neutral',
+                'blue', 'blue', 'blue', 'blue', 'red',
+                'red', 'red', 'neutral', 'neutral', 'neutral'];
+const blueCount = COLORS.filter(function(x) {return x === "blue"}).length;
+const BLUEFIRST = blueCount >= 9;
+
+function Card(props) {
+    return (
+      <button
+        className={'card card-'+props.color}
+        onClick={() => props.onClick()}
+      >
+        {props.word}
+      </button>
+    );
+}
+  
+class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      cards: Array(25).fill(null),
-      colors: Array(25).fill('white'),
-      xIsNext: true,
+      words: WORDS,
+      colors: Array(25).fill(null),
+      blueTurn: BLUEFIRST,
+      playerTurn: false,
+      picksLeft: 0,
+      hint: null,
     };
+
+    this.handleClick = this.handleClick.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   handleClick(i) {
-    const cards = this.state.cards.slice();
-    const colors = this.state.colors.slice();
-    if (calculateWinner(cards)) {
-      return;
+    if (this.state.playerTurn) {
+      let colors = this.state.colors.slice();
+      colors[i] = COLORS[i];
+
+      let blueTurn = this.state.blueTurn;
+      let correctPick = (blueTurn && colors[i] === "blue") ||
+                        (!blueTurn && colors[i] === "red");
+      let picksLeft = this.state.picksLeft - 1;
+
+      if (correctPick && picksLeft > 0) {
+        this.setState({
+          colors: colors,
+          picksLeft: picksLeft
+        })
+      } else {
+        this.setState({
+          colors: colors,
+          blueTurn: !blueTurn,
+          playerTurn: false,
+          picksLeft: 0,
+          hint: null,
+        })
+      }
     }
-    cards[i] = this.state.xIsNext ? 'x' : 'o';
-    colors[i] = this.state.xIsNext ? 'rgba(180,10,10,0.4)' : 'rgba(0,40,220,0.4)'
-    this.setState({
-      cards: cards,
-      colors: colors,
-      xIsNext: !this.state.xIsNext,
-    });
+  }
+
+  handleChange(event) {
+    this.setState({hint: event.target.value});
+  }
+
+  handleSubmit(event) {
+    let response = this.state.hint.split(", ");
+
+    if (/[^a-zA-Z-.]/.test(response[0]) ||
+        !/\d+?/.test(response[1]) ||
+        response[1] <= 0 ||
+        response[1] > 25) {
+      alert("bad");
+    } else {
+      this.setState({
+        playerTurn: true,
+        picksLeft: Number(response[1]),
+        hint: response[0],
+      });
+    }
+
+    event.preventDefault();
+  }
+
+  renderHintForm() {
+    return (
+      <form id="hint" onSubmit={this.handleSubmit}>
+        <label>
+          Hint, Count: {"\t"}
+          <input
+            type="text"
+            value={this.state.hint}
+            onChange={this.handleChange}
+          />
+        </label> {"\t"}
+        <input type="submit" value="go" />
+      </form>
+    );
+  }
+
+  renderHint() {
+    return (
+      <div className="header">
+        Hint: {this.state.hint} <br/>
+        {this.state.picksLeft} picks remain.
+      </div>
+    );
   }
 
   renderCard(i) {
     return (
       <Card
-        value={this.state.cards[i]}
-        style={{background: this.state.colors[i]}}
+        word={this.state.words[i]}
+        color={this.state.colors[i]}
         onClick={() => this.handleClick(i)}
       />
     );
   }
 
-  render() {
-    const winner = calculateWinner(this.state.cards);
-    let status;
-    if (winner) {
-      status = 'WINNER: ' + winner;
+  renderScores() {
+    let colors = this.state.colors.slice();
+    let blueScore = colors.filter(function(x) {return x === "blue"}).length;
+    let redScore = colors.filter(function(x) {return x === "red"}).length;
+
+    if (BLUEFIRST) {
+      if (blueScore >= 9) {
+        return <span style={{color: "#00f"}}>BLUE TEAM WINS!</span>;
+      } else if (redScore >= 8) {
+        return <span style={{color: "#f00"}}>RED TEAM WINS!</span>;
+      }
     } else {
-      status = 'Your turn, ' + (this.state.xIsNext ? 'red team!' : 'blue team!');
+      if (blueScore >= 8) {
+        return <span style={{color: "#00f"}}>BLUE TEAM WINS!</span>;
+      } else if (redScore >= 9) {
+        return <span style={{color: "#f00"}}>RED TEAM WINS!</span>;
+      }
     }
 
     return (
-      <div>
-        <div className="status">{status}</div>
-        <div className="board-row">
-          {this.renderCard(0)}
-          {this.renderCard(1)}
-          {this.renderCard(2)}
-          {this.renderCard(3)}
-          {this.renderCard(4)}
-        </div>
-        <div className="board-row">
-          {this.renderCard(5)}
-          {this.renderCard(6)}
-          {this.renderCard(7)}
-          {this.renderCard(8)}
-          {this.renderCard(9)}
-        </div>
-        <div className="board-row">
-          {this.renderCard(10)}
-          {this.renderCard(11)}
-          {this.renderCard(12)}
-          {this.renderCard(13)}
-          {this.renderCard(14)}
-        </div>
-        <div className="board-row">
-          {this.renderCard(15)}
-          {this.renderCard(16)}
-          {this.renderCard(17)}
-          {this.renderCard(18)}
-          {this.renderCard(19)}
-        </div>
-        <div className="board-row">
-          {this.renderCard(20)}
-          {this.renderCard(21)}
-          {this.renderCard(22)}
-          {this.renderCard(23)}
-          {this.renderCard(24)}
-        </div>
+      <div style={{display: "block"}}>
+        Score: {"\t"}
+        <span style={{color: "#00f"}}>{blueScore}</span>
+        <span style={{color: "#000"}}> - </span>
+        <span style={{color: "#f00"}}>{redScore}</span>
       </div>
     );
   }
-}
 
-class Game extends React.Component {
   render() {
+    const status = this.state.blueTurn ? "BLUE" : "RED";
+    const statusColor = this.state.blueTurn ? "#00f" : "#f00";
+    const player = this.state.playerTurn ? "team" : "codemaster";
+
     return (
-      <div className="game">
-        <div className="game-board">
-          <Board />
+      <div>
+        <div className="header">
+          <span style={{color: statusColor}}>{status}</span> {player}'s turn
         </div>
-        <div className="game-info">
-          <div>{/* status */}</div>
-          <ol>{/* TODO */}</ol>
+
+        {this.renderScores()}
+        
+        {this.state.playerTurn ? this.renderHint() : this.renderHintForm()}
+
+        <div>
+          {[0,1,2,3,4].map(i => this.renderCard(i))}
+        </div>
+        <div>
+          {[5,6,7,8,9].map(i => this.renderCard(i))}
+        </div>
+        <div>
+          {[10,11,12,13,14].map(i => this.renderCard(i))}
+        </div>
+        <div>
+          {[15,16,17,18,19].map(i => this.renderCard(i))}
+        </div>
+        <div>
+          {[20,21,22,23,24].map(i => this.renderCard(i))}
         </div>
       </div>
     );
   }
 }
-
+  
 // ========================================
-
+  
 ReactDOM.render(
   <Game />,
   document.getElementById('root')
 );
-
-function calculateWinner(cards) {
-  // const lines = [
-  //   [0, 1, 2],
-  //   [3, 4, 5],
-  //   [6, 7, 8],
-  //   [0, 3, 6],
-  //   [1, 4, 7],
-  //   [2, 5, 8],
-  //   [0, 4, 8],
-  //   [2, 4, 6],
-  // ];
-  // for (let i = 0; i < lines.length; i++) {
-  //   const [a, b, c] = lines[i];
-  //   if (cards[a] && cards[a] === cards[b] && cards[a] === cards[c]) {
-  //     return cards[a];
-  //   }
-  // }
-  return null;
-}
